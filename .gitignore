@@ -7,3 +7,4 @@ dexagent.local.yaml
 .claude/
 examples/asset_reuse/*
 !examples/asset_reuse/.gitkeep
+setup_flexiv/search_results/

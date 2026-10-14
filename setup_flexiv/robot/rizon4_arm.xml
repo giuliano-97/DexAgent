@@ -1,0 +1,62 @@
+<!-- Flexiv Rizon 4, from flexiv_description 6d5145ea74bce2a7f61867a7ae3de3823ec6154f; built by build_setup.py -->
+<mujoco model="flexiv_rizon4">
+  <compiler angle="radian" meshdir="../assets/flexiv/" />
+  <asset>
+    <mesh name="link0" file="link0.obj" />
+    <mesh name="link1" file="link1.obj" />
+    <mesh name="link2" file="link2.obj" />
+    <mesh name="link3" file="link3.obj" />
+    <mesh name="link4" file="link4.obj" />
+    <mesh name="link5" file="link5.obj" />
+    <mesh name="link6" file="link6.obj" />
+    <mesh name="link7" file="link7.obj" />
+  </asset>
+  <worldbody>
+    <body name="root">
+      <body name="base">
+        <inertial pos="0 -0.0008 0.0883" mass="3.863" fullinertia="0.0188 0.019 0.0103 0 0 0.0002" />
+        <geom type="mesh" mesh="link0" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
+        <body name="link1" pos="0 0 0.155" quat="6.123234e-17 0 0 1">
+          <inertial pos="0.0002 0.004 0.1451" mass="3.85" fullinertia="0.0308 0.0307 0.0077 0 -0.0001 0.0012" />
+          <joint name="dof_joint1" axis="0 0 1" range="-2.7925 2.7925" />
+          <geom type="mesh" mesh="link1" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
+          <body name="link2" pos="0 0.03 0.21" quat="1 0 0 0">
+            <inertial pos="0 0.0356 0.0946" mass="2.904" fullinertia="0.0255 0.0263 0.0039 0 0.0001 -0.0001" />
+            <joint name="dof_joint2" axis="0 1 0" range="-2.2689 2.2689" />
+            <geom type="mesh" mesh="link2" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
+            <body name="link3" pos="0 0.035 0.205" quat="1 0 0 0">
+              <inertial pos="-0.0123 -0.0021 0.1368" mass="2.381" fullinertia="0.0144 0.0139 0.0039 0.0001 -0.0015 -0.0006" />
+              <joint name="dof_joint3" axis="0 0 1" range="-2.9671 2.9671" />
+              <geom type="mesh" mesh="link3" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
+              <body name="link4" pos="-0.02 -0.03 0.19" quat="6.123234e-17 0 0 1">
+                <inertial pos="-0.0129 0.0309 0.1047" mass="2.381" fullinertia="0.0184 0.0188 0.0029 0.0001 -0.0016 -0.0012" />
+                <joint name="dof_joint4" axis="0 1 0" range="-1.8675 2.6878" />
+                <geom type="mesh" mesh="link4" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
+                <body name="link5" pos="-0.02 0.025 0.195" quat="6.123234e-17 0 0 1">
+                  <inertial pos="0.0003 0.0024 0.1365" mass="2.336" fullinertia="0.0144 0.0136 0.0036 0 0 0.0006" />
+                  <joint name="dof_joint5" axis="0 0 1" range="-2.9671 2.9671" />
+                  <geom type="mesh" mesh="link5" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
+                  <body name="link6" pos="0 0.03 0.19" quat="1 0 0 0">
+                    <inertial pos="0.0193 0.0595 0.0726" mass="2.251" fullinertia="0.0085 0.0089 0.0041 0.0004 0.0012 0.0018" />
+                    <joint name="dof_joint6" axis="0 1 0" range="-1.3963 4.5379" />
+                    <geom type="mesh" mesh="link6" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
+                    <body name="link7" pos="-0.015 0.073 0.11" quat="0.707106781 0 -0.707106781 0">
+                      <inertial pos="0.0003 0.0008 0.025" mass="0.774" fullinertia="0.001 0.001 0.0009 0 0 0" />
+                      <joint name="dof_joint7" axis="0 0 1" range="-2.9671 2.9671" />
+                      <geom type="mesh" mesh="link7" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
+                      <body name="flange" pos="0 0 0.081" quat="6.123234e-17 0 0 1">
+                        <inertial pos="0 0 0.0075" mass="0.12" diaginertia="4e-05 4e-05 6e-05" />
+                        <geom type="cylinder" size="0.0315 0.0075" pos="0 0 0.0075" contype="0" conaffinity="0" group="1" density="0" rgba="0.55 0.56 0.58 1" />
+                        <body name="gripper" pos="0 0 0.015" />
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
