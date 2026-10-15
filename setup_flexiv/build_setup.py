@@ -71,7 +71,7 @@ ADAPTER_MASS_KG = 0.12
 PLACEMENT = {
     "half_span": 0.25,                   # root x = 0.015 -/+ half_span
     "root_z": 0.0,
-    "base_offset": (0.0, 0.0, -0.25),    # (outward along x, y, z) of the base in its root, metres
+    "base_offset": (0.0, 0.0, 0.25),     # (outward along x, y, z) of the base in its root, metres
     "base_tilt_deg": 45.0,               # each base's joint-1 axis leans this far outward from vertical (angled bracket)
     "base_yaw_deg": 135.0,               # right base's turn about its own (tilted) axis; the left one is mirrored: 180 - yaw
     "mount_roll_deg": {"left": -270.0, "right": 270.0},   # the hand's roll on the adapter, about the flange axis
@@ -80,12 +80,12 @@ PLACEMENT = {
 # (HOME_HAND_STYLE "palm_down" lays them flat instead: palms down, thumbs inward). Sharpa hand frame: fingers +z, palm faces +x, thumb on +y
 # (right) / -y (left).
 # x / y are where the ego camera (default bench calibration) saw them at 34% / 67% of the image width and 61% of its
-# height at z = 0.16; the hands were then lowered 0.5 m (the table is out for now) and spread to 0.36 m apart about
-# their midpoint, then moved 0.20 m forward.
-HOME_HANDS = {"left": [-0.200, 0.520, -0.34], "right": [0.160, 0.520, -0.34]}
+# height at z = 0.16; the hands were then spread to 0.36 m apart about their midpoint and moved 0.20 m forward.
+HOME_HANDS = {"left": [-0.200, 0.520, 0.16], "right": [0.160, 0.520, 0.16]}
 HOME_HAND_STYLE = "on_edge"
 HOME_FINGER_PITCH_UP_DEG = 0.0
-INCLUDE_TABLE = False                    # the default bench's table (and its hand-table contact pairs); off for now
+INCLUDE_TABLE = True                     # the default bench's table (and its hand-table contact pairs)
+TABLE_TOP_Z = 0.0                        # the default bench's: 0.16 m under the hands
 RIG_MID_X = 0.015
 ARM_RGBA = "0.92 0.92 0.93 1"
 PEDESTAL_RGBA = "0.25 0.25 0.27 1"
@@ -183,8 +183,13 @@ def station_frames(placement):
 
 def scene_tree(placement=PLACEMENT, bench=DEFAULT_BENCH, table=INCLUDE_TABLE):
     """The default bench with its two YAM arms replaced by Rizon 4 stations (no keyframe yet); without `table`, the
-    table body and every contact pair naming its geom are left out."""
+    table body and every contact pair naming its geom are left out; with it, its top is moved to TABLE_TOP_Z."""
     root = ET.parse(bench).getroot()
+    if table:
+        body = root.find("worldbody/body[@name='table']")
+        half = float(body.find("geom").get("size").split()[2])
+        x, y, _ = (float(v) for v in body.get("pos").split())
+        body.set("pos", _v([x, y, TABLE_TOP_Z - half]))
     if not table:
         world0 = root.find("worldbody")
         world0.remove(world0.find("body[@name='table']"))

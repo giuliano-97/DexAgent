@@ -21,7 +21,7 @@ if m.nkey:
     mujoco.mj_resetDataKeyframe(m, d, max(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_KEY, "home"), 0))
 mujoco.mj_forward(m, d)
 with mujoco.viewer.launch_passive(m, d) as v:
-    v.cam.lookat[:] = (0.015, 0.0, 0.25)
+    v.cam.lookat[:] = (0.015, 0.25, 0.20)
     v.cam.distance, v.cam.azimuth, v.cam.elevation = 2.0, -90, -30   # front: from the far side of the table
     while v.is_running():
         mujoco.mj_forward(m, d)          # kinematics only; no mj_step

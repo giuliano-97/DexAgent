@@ -109,6 +109,9 @@
     <camera name="ego" pos="0.0187862 -0.182928 0.557788" quat="0.881567 0.470897 0.0249467 0.021763" fovy="38" />
     <light pos="6.70448e-08 0.35 3.3623" dir="0 0 -1" castshadow="false" />
     <light pos="1.7195 1.5923 2.8623" dir="-0.467988 -0.338112 -0.816497" castshadow="false" />
+    <body name="table" pos="1.92587e-07 1.125 -0.02" quat="1 0 0 -1.88231e-07">
+      <geom name="g_table" size="1.8 1.075 0.02" type="box" rgba="0.263 0.204 0.142 1" />
+    </body>
     <body name="robot_right_right_base_tx">
       <inertial pos="0 0 0" mass="0.1" diaginertia="0.01 0.01 0.01" />
       <joint name="robot_right_right_pos_x" pos="0 0 0" axis="1 0 0" type="slide" range="-5 5" armature="1" />
@@ -304,7 +307,7 @@
       </body>
     </body>
     <body name="robot_right_arm_root" pos="0.265 0 0">
-      <body name="robot_right_arm_base" pos="0 0 -0.25" quat="0.353553391 0.353553391 0.146446609 0.853553391">
+      <body name="robot_right_arm_base" pos="0 0 0.25" quat="0.353553391 0.353553391 0.146446609 0.853553391">
         <inertial pos="0 -0.0008 0.0883" mass="0.25" diaginertia="0.00025 0.00025 0.00025" />
         <geom type="mesh" mesh="robot_right_arm_link0" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
         <body name="robot_right_arm_link1" pos="0 0 0.155" quat="6.123234e-17 0 0 1">
@@ -347,8 +350,8 @@
           </body>
         </body>
       </body>
-      <geom name="robot_right_mount_plate" type="box" size="0.11 0.11 0.01" pos="-0.00707106781 0 -0.257071068" quat="0.353553391 0.353553391 0.146446609 0.853553391" contype="0" conaffinity="0" group="1" density="0" rgba="0.25 0.25 0.27 1" />
-      <geom name="robot_right_pedestal" type="box" size="0.05 0.05 0.281819805" pos="-0.0494974747 0 -0.468180195" contype="0" conaffinity="0" group="1" density="0" rgba="0.25 0.25 0.27 1" />
+      <geom name="robot_right_mount_plate" type="box" size="0.11 0.11 0.01" pos="-0.00707106781 0 0.242928932" quat="0.353553391 0.353553391 0.146446609 0.853553391" contype="0" conaffinity="0" group="1" density="0" rgba="0.25 0.25 0.27 1" />
+      <geom name="robot_right_pedestal" type="box" size="0.05 0.05 0.531819805" pos="-0.0494974747 0 -0.218180195" contype="0" conaffinity="0" group="1" density="0" rgba="0.25 0.25 0.27 1" />
     </body>
     <body name="robot_left_left_base_tx">
       <inertial pos="0 0 0" mass="0.1" diaginertia="0.01 0.01 0.01" />
@@ -545,7 +548,7 @@
       </body>
     </body>
     <body name="robot_left_arm_root" pos="-0.235 0 0">
-      <body name="robot_left_arm_base" pos="-0 0 -0.25" quat="0.853553391 -0.146446609 -0.353553391 0.353553391">
+      <body name="robot_left_arm_base" pos="-0 0 0.25" quat="0.853553391 -0.146446609 -0.353553391 0.353553391">
         <inertial pos="0 -0.0008 0.0883" mass="0.25" diaginertia="0.00025 0.00025 0.00025" />
         <geom type="mesh" mesh="robot_left_arm_link0" contype="0" conaffinity="0" group="1" density="0" rgba="0.92 0.92 0.93 1" />
         <body name="robot_left_arm_link1" pos="0 0 0.155" quat="6.123234e-17 0 0 1">
@@ -588,13 +591,45 @@
           </body>
         </body>
       </body>
-      <geom name="robot_left_mount_plate" type="box" size="0.11 0.11 0.01" pos="0.00707106781 5.55111512e-19 -0.257071068" quat="0.853553391 -0.146446609 -0.353553391 0.353553391" contype="0" conaffinity="0" group="1" density="0" rgba="0.25 0.25 0.27 1" />
-      <geom name="robot_left_pedestal" type="box" size="0.05 0.05 0.281819805" pos="0.0494974747 3.88578059e-18 -0.468180195" contype="0" conaffinity="0" group="1" density="0" rgba="0.25 0.25 0.27 1" />
+      <geom name="robot_left_mount_plate" type="box" size="0.11 0.11 0.01" pos="0.00707106781 5.55111512e-19 0.242928932" quat="0.853553391 -0.146446609 -0.353553391 0.353553391" contype="0" conaffinity="0" group="1" density="0" rgba="0.25 0.25 0.27 1" />
+      <geom name="robot_left_pedestal" type="box" size="0.05 0.05 0.531819805" pos="0.0494974747 3.88578059e-18 -0.218180195" contype="0" conaffinity="0" group="1" density="0" rgba="0.25 0.25 0.27 1" />
     </body>
     <body name="camrig" pos="6.70448e-08 0.35 0.3623" quat="-0.491472 0.867231 0.0694148 0.0393383" mocap="true" />
   </worldbody>
   <contact>
-    </contact>
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_palm_0" name="robot_right_collision_hand_right_palm_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_thumb_2" name="robot_right_collision_hand_right_thumb_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_thumb_1" name="robot_right_collision_hand_right_thumb_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_thumb_0" name="robot_right_collision_hand_right_thumb_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_index_2" name="robot_right_collision_hand_right_index_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_index_1" name="robot_right_collision_hand_right_index_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_index_0" name="robot_right_collision_hand_right_index_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_middle_2" name="robot_right_collision_hand_right_middle_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_middle_1" name="robot_right_collision_hand_right_middle_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_middle_0" name="robot_right_collision_hand_right_middle_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_ring_2" name="robot_right_collision_hand_right_ring_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_ring_1" name="robot_right_collision_hand_right_ring_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_ring_0" name="robot_right_collision_hand_right_ring_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_pinky_2" name="robot_right_collision_hand_right_pinky_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_pinky_1" name="robot_right_collision_hand_right_pinky_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_right_collision_hand_right_pinky_0" name="robot_right_collision_hand_right_pinky_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_palm_0" name="robot_left_collision_hand_left_palm_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_thumb_2" name="robot_left_collision_hand_left_thumb_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_thumb_1" name="robot_left_collision_hand_left_thumb_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_thumb_0" name="robot_left_collision_hand_left_thumb_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_index_2" name="robot_left_collision_hand_left_index_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_index_1" name="robot_left_collision_hand_left_index_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_index_0" name="robot_left_collision_hand_left_index_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_middle_2" name="robot_left_collision_hand_left_middle_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_middle_1" name="robot_left_collision_hand_left_middle_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_middle_0" name="robot_left_collision_hand_left_middle_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_ring_2" name="robot_left_collision_hand_left_ring_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_ring_1" name="robot_left_collision_hand_left_ring_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_ring_0" name="robot_left_collision_hand_left_ring_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_pinky_2" name="robot_left_collision_hand_left_pinky_2_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_pinky_1" name="robot_left_collision_hand_left_pinky_1_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+    <pair geom1="g_table" geom2="robot_left_collision_hand_left_pinky_0" name="robot_left_collision_hand_left_pinky_0_g_table" solref="0.01" friction="1 1 0.1 0 0" />
+  </contact>
   <equality>
     <weld body1="robot_right_arm_gripper" body2="robot_right_right_base_yaw" anchor="0 0 0" relpose="0 0 0 1 0 0 0" torquescale="0" />
     <weld body1="robot_left_arm_gripper" body2="robot_left_left_base_yaw" anchor="0 0 0" relpose="0 0 0 1 0 0 0" torquescale="0" />
@@ -658,6 +693,6 @@
     <general name="robot_left_left_pinky_DIP_position" joint="robot_left_left_pinky_DIP" ctrlrange="0 1.3963" biastype="affine" gainprm="300" biasprm="0 -300 1" />
   </actuator>
   <keyframe>
-    <key name="home" qpos="0.16 0.52 -0.34 -1.57079633 0 3.14159265 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.67817593 1.74963707 0.42607883 -1.34114858 -0.720385483 0.308994642 -1.07476846 -0.2 0.52 -0.34 -1.57079633 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.93691661 1.62237113 -0.527464785 -1.53453614 0.393017745 0.198549351 1.27703686" ctrl="0.16 0.52 -0.34 -1.57079633 0 3.14159265 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.2 0.52 -0.34 -1.57079633 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0" />
+    <key name="home" qpos="0.16 0.52 0.16 -1.57079633 0 3.14159265 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.67817593 1.74963707 0.42607883 -1.34114858 -0.720385483 0.308994642 -1.07476846 -0.2 0.52 0.16 -1.57079633 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.93691661 1.62237113 -0.527464785 -1.53453614 0.393017745 0.198549351 1.27703686" ctrl="0.16 0.52 0.16 -1.57079633 0 3.14159265 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.2 0.52 0.16 -1.57079633 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0" />
   </keyframe>
 </mujoco>
