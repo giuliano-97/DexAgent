@@ -48,6 +48,21 @@ def joint_id(model, name):
     return jid
 
 
+def is_wrist_roll_joint(model, j, hints=("roll", "wrist", "j6")):
+    """A hinge named like a wrist roll, or the last `<prefix>arm_dof_joint<N>` of its arm (joint 6 of a 6-DOF arm,
+    joint 7 of a 7-DOF one)."""
+    name = model.joint(j).name
+    if any(h in name.lower() for h in hints):
+        return True
+    head, sep, n = name.rpartition("arm_dof_joint")
+    return bool(sep) and n.isdigit() and joint_id_or_none(model, f"{head}arm_dof_joint{int(n) + 1}") is None
+
+
+def joint_id_or_none(model, name):
+    j = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, name)
+    return None if j < 0 else j
+
+
 def joint_qadr(model, names):
     """qpos column of each named scalar joint (hinge or slide)."""
     out = []

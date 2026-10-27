@@ -45,7 +45,8 @@ T_RETREAT, T_RETREAT_HOLD = 0.8, 0.2
 
 
 def default_hand_xml(side: str) -> Path:
-    return REPO / "setup" / "robot" / f"sharpa_{side}.xml"
+    from tool_library.common.setup_path import setup_dir
+    return setup_dir() / "robot" / f"sharpa_{side}.xml"
 
 
 def smoothstep(u):

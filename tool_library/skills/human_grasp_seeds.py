@@ -72,7 +72,6 @@ import numpy as np
 
 START_MOTIONS = ("grasp_lift", "hold", "regrasp", "pull", "open_joint", "close_joint", "unscrew", "screw", "tie", "fold")
 NO_CONTACT_MOTIONS = ("release", "place", "carry", "insert", "pour", "tilt", "home")
-DEFAULT_SETUP = Path(__file__).resolve().parents[2] / "setup"
 
 
 def _load(x):

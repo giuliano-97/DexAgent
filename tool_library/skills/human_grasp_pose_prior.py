@@ -73,7 +73,7 @@ import numpy as np
 
 from tool_library.common import human_prior as HP
 
-DEFAULT_SETUP = Path(__file__).resolve().parents[2] / "setup"
+from tool_library.common.setup_path import setup_dir as run_setup_dir
 
 
 def _curl_deg(chain):
@@ -107,7 +107,7 @@ def human_grasp_pose_prior(side, frame, out_json=None, hands_npz=None, hamer_npz
         if camera is None:
             raise ValueError("hamer_npz needs camera (the video's camera.json) to place the hand in the rig frame")
         kp = HP.keypoints_from_hamer(hamer_npz, camera, side, frames, joint_regressor)
-    hand_xml = str(hand_xml or (Path(setup_dir) if setup_dir else DEFAULT_SETUP) / "robot" / f"sharpa_{side}.xml")
+    hand_xml = str(hand_xml or (Path(setup_dir) if setup_dir else run_setup_dir()) / "robot" / f"sharpa_{side}.xml")
     ref = HP.sharpa_reference(hand_xml, side)
     R_a, c_a = ref["R_anat"], ref["c_anat"]
     T = len(frames)

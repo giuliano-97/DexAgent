@@ -78,7 +78,7 @@ def check_wrist_spin(scene, trajectory, joints=None, spin_limit_deg=180.0, redun
     Q, labels, fps = TJ.as_trajectory(trajectory)
     if joints is None:
         joints = [model.joint(j).name for j in range(model.njnt) if int(model.jnt_type[j]) == TJ.HINGE
-                  and any(k in model.joint(j).name.lower() for k in ("roll", "j6", "wrist", "joint6"))]
+                  and TJ.is_wrist_roll_joint(model, j)]
         if not joints:
             raise ValueError("no wrist hinge found by name; pass joints=[...]")
     rep, ok = {}, True

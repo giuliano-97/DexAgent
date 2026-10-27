@@ -1,0 +1,35 @@
+# An EgoDex episode on the bimanual Flexiv Rizon 4 + Sharpa Wave bench (setup_flexiv/), with Gemini as the agent.
+#   export OPENAI_API_KEY=<your Gemini API key>        # the openai provider reads this; Google's endpoint takes the Gemini key
+#   python run_dexagent.py dexagent_flexiv_egodex.yaml
+# Keys left out (or empty) fall back to dexagent.yaml.
+
+agent:
+  provider: openai                     # Gemini through Google's OpenAI-compatible endpoint
+  base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+  model: gemini-3-pro-preview          # TODO: the Gemini model id you have access to
+  budget_usd: null                     # TODO (required): the run's spending cap in USD
+  price_usd_per_mtok: {input: null, output: null}   # TODO (required for a model DexAgent does not list): USD per million tokens
+
+run:
+  name: egodex_flexiv
+  output_dir: runs
+
+examples:
+  reuse: false                         # the shipped examples were solved on the YAM bench; do not shift them onto the Rizon
+
+inputs:
+  video: null                          # the episode's .mp4 beside the .hdf5
+  egodex_hdf5: /scratch/giuliano_albanese/egodex/TODO/0.hdf5   # TODO: the EgoDex episode
+  task: ""
+  setup: setup_flexiv
+
+stage3:
+  notes: "The arms are 7-DOF Flexiv Rizon 4s on columns 0.25 m above the tabletop, bases tilted 45 deg outward; at home the hands are palm down, 0.60 m apart, 0.70 m into the table and 0.10 m above it."
+
+environments:                          # TODO on the GPU node: interpreters for the perception tools and Stage 4 (see dexagent.yaml)
+  sam3: null
+  sam2: null
+  hamer: null
+  sam3d: null
+  depth: null
+  stage4: null

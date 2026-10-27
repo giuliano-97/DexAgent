@@ -61,7 +61,7 @@ from tool_library.common import trajectory as TJ
 REAL_WRIST_STOPS_DEG = {"right": (-20.0, 180.0), "left": (-180.0, 20.0)}
 
 
-WRIST_NAME_HINTS = ("roll", "wrist", "j6", "joint6")
+WRIST_NAME_HINTS = ("roll", "wrist", "j6")    # and the last arm_dof_joint<N> of each arm (TJ.is_wrist_roll_joint)
 
 
 def check_wrist_stop(scene, trajectory, joints=None, real_stops=None, margin_deg=2.0, robot_prefix="robot_"):
@@ -70,7 +70,7 @@ def check_wrist_stop(scene, trajectory, joints=None, real_stops=None, margin_deg
     if joints is None:
         names = [model.joint(j).name for j in range(model.njnt)
                  if int(model.jnt_type[j]) == TJ.HINGE and model.body(model.jnt_bodyid[j]).name.startswith(robot_prefix)
-                 and any(h in model.joint(j).name.lower() for h in WRIST_NAME_HINTS)]
+                 and TJ.is_wrist_roll_joint(model, j, WRIST_NAME_HINTS)]
         if not names:
             raise ValueError("no wrist hinge found by name; pass joints")
         joints = {}

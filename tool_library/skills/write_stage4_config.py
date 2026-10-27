@@ -316,6 +316,15 @@ def _anchor_to_support(phases, objs):
     return out
 
 
+def _robot_materials():
+    """The robot's render presets: the run's setup.yaml `render.materials`, else the default bench's (YAM arms, Sharpa hands)."""
+    import yaml
+    from tool_library.common.setup_path import setup_dir
+    y = setup_dir() / "setup.yaml"
+    mats = ((yaml.safe_load(y.read_text()) or {}).get("render") or {}).get("materials") if y.is_file() else None
+    return mats or [{"match": "^robot_\\w+_arm_", "preset": "yam_black"}, {"match": "^robot_", "preset": "sharpa"}]
+
+
 def write_stage4_config(scene_recon_json, episode_dir, out_dir, human_video, sim_video=None, scene_semantic_json=None,
                         num_samples=3, ranges=None, name=None, scene=None, manifest=None, physics_replay=True,
                         group_clearance_m=0.01, plan=None, deformables=True, fixed_bases=False, next_to=True):
@@ -536,7 +545,7 @@ def write_stage4_config(scene_recon_json, episode_dir, out_dir, human_video, sim
            "table": {"top_z": round(top_z, 4), "center": [round(x, 4) for x in center], "half_size": [round(x, 3) for x in half]},
            "inpaint": {"erase_prompts": prompts, **({"background_prompt": background} if background else {})},
            "render": {"stride": 2, "samples": 32, "chunks": 4, "exclude_geoms": ["^table", "groundplane", "floor", "^g_table"],
-                      "materials": [{"match": "^robot_\\w+_arm_", "preset": "yam_black"}, {"match": "^robot_", "preset": "sharpa"}]}}
+                      "materials": _robot_materials()}}
     # what the physics replay of every augmented episode re-checks: the subgoal expectations, the servo commands
     # (the executed fingers stop on the object; their commands press), the run-time rules of the scene
     (out / "trajectory_manifest.json").write_text(json.dumps({"source": str(man_src) if man_src else "episode outcomes",

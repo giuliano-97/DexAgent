@@ -103,9 +103,10 @@ def _headline(name, r):
 
 
 def _setup_end_effectors(model):
-    """{side: hand_root_body} of the default setup's stations that exist in the model."""
+    """{side: hand_root_body} of the run's setup's stations that exist in the model."""
     import yaml
-    sy = yaml.safe_load((Path(__file__).resolve().parents[2] / "setup" / "setup.yaml").read_text())
+    from tool_library.common.setup_path import setup_dir
+    sy = yaml.safe_load((setup_dir() / "setup.yaml").read_text())
     out = {}
     for side, st in (sy.get("stations") or {}).items():
         b = (st or {}).get("hand_root_body")

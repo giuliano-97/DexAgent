@@ -95,14 +95,21 @@ class OpenAILLM:
                 args = json.loads(tc.function.arguments or "{}")
             except json.JSONDecodeError:
                 args = {"_raw": tc.function.arguments}
-            out.append({"type": "tool_use", "id": tc.id, "name": tc.function.name, "input": args})
+            block = {"type": "tool_use", "id": tc.id, "name": tc.function.name, "input": args}
+            # Gemini's OpenAI-compatible endpoint signs each call (extra_content.google.thought_signature) and
+            # rejects a later request whose history drops the signature
+            extra = (getattr(tc, "model_extra", None) or {}).get("extra_content")
+            if extra:
+                block["extra_content"] = extra
+            out.append(block)
         return out
 
     @staticmethod
     def _msgs(m: dict) -> list[dict]:
         if m["role"] == "assistant":
             text = "".join(c["text"] for c in m["content"] if c["type"] == "text")
-            calls = [{"id": c["id"], "type": "function", "function": {"name": c["name"], "arguments": json.dumps(c["input"])}}
+            calls = [{"id": c["id"], "type": "function", "function": {"name": c["name"], "arguments": json.dumps(c["input"])},
+                      **({"extra_content": c["extra_content"]} if c.get("extra_content") else {})}
                      for c in m["content"] if c["type"] == "tool_use"]
             msg = {"role": "assistant", "content": text or None}
             if calls:

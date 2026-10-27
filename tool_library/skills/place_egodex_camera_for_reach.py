@@ -76,7 +76,7 @@ import numpy as np
 from tool_library.common import human_prior as HP
 from tool_library.common import rigcam as RC
 
-DEFAULT_SETUP = Path(__file__).resolve().parents[2] / "setup"
+from tool_library.common.setup_path import setup_dir as run_setup_dir
 
 
 def _rz(deg):
@@ -271,7 +271,7 @@ def place_egodex_camera_for_reach(out_dir, episode_dir=None, camera=None, masks=
                                   exclude=None, flat=None, objects=None):
     import yaml
     out = Path(out_dir); out.mkdir(parents=True, exist_ok=True)
-    setup = Path(setup_dir) if setup_dir else DEFAULT_SETUP
+    setup = Path(setup_dir) if setup_dir else run_setup_dir()
     scene_xml = setup / "scene.xml"
     sy = yaml.safe_load((setup / "setup.yaml").read_text())
     tab = sy.get("table", {})

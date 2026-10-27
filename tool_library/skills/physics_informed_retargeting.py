@@ -82,6 +82,7 @@ import numpy as np
 from tool_library.common import episode as E
 from tool_library.common import spider_bridge as SB
 from tool_library.common import tracking as TR
+from tool_library.common.setup_path import setup_dir as run_setup_dir
 
 REPO = Path(__file__).resolve().parents[2]
 NAME = TOOL["name"]
@@ -109,7 +110,7 @@ def reference_from_human(model, human, sem, plan_ref=None, object_poses="plan", 
     given track, and labels per Stage 1 time window ('<side>: <motion> <object>', reach before the hand's object first
     moves, retreat after it last moves). Returns the reference dict plus {human_kp: {side: {palm, tips, root}}}."""
     from tool_library.common import human_prior as HP
-    setup_dir = Path(setup_dir or REPO / "setup")
+    setup_dir = Path(setup_dir or run_setup_dir())
     sides = [s for s in (sem.get("hands") or {}).get("used", []) if s in SB.SIDE_ORDER] or ["right"]
     frames = human.get("frames")
     src_fps = float(human.get("fps", fps))
@@ -246,7 +247,7 @@ def physics_informed_retargeting(workspace, scene_semantic_json, scene_recon_jso
     ws = Path(workspace).resolve()
     sem_p, recon_p = Path(scene_semantic_json).resolve(), Path(scene_recon_json).resolve()
     sem, recon = json.loads(sem_p.read_text()), json.loads(recon_p.read_text())
-    setup_dir = Path(setup_dir or REPO / "setup").resolve()
+    setup_dir = Path(setup_dir or run_setup_dir()).resolve()
     out = Path(out_dir or ws / "methods" / NAME).resolve()
     out.mkdir(parents=True, exist_ok=True)
     rep = {"ok": False, "method": NAME, "out_dir": str(out)}

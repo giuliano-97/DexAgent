@@ -28,7 +28,47 @@ WRIST_SUFFIXES = ("pos_x", "pos_y", "pos_z", "rot_x", "rot_y", "rot_z")
 ARM_TORQUE_NM = np.array([28., 28., 28., 10., 10., 10.])
 ARM_KP = np.array([180., 180., 140., 70., 50., 40.])
 ARM_KD = np.array([18., 18., 14., 6., 4., 3.])
+ARM_ARMATURE = np.array([0.032, 0.032, 0.032, 0.0018, 0.0018, 0.0018])
 _SPECS = weakref.WeakKeyDictionary()
+
+
+def setup_scene_default():
+    from tool_library.common.setup_path import setup_dir
+    return setup_dir() / "scene.xml"
+
+
+@lru_cache(maxsize=8)
+def arm_spec(setup_scene=None):
+    """The arm of the setup beside `setup_scene` (default: the run's setup): its runtime_robot block in setup.yaml
+    gives per-joint torque caps, armature, posture gains, the arm file the inertias come from and the arm bodies next
+    to the hand; any key it leaves out is the I2RT YAM's."""
+    import yaml
+    d = Path(setup_scene or setup_scene_default()).parent
+    if not (d / "setup.yaml").is_file():           # a scene built from the setup elsewhere (a run's workspace)
+        d = setup_scene_default().parent
+    y = d / "setup.yaml"
+    rt = ((yaml.safe_load(y.read_text()) or {}).get("runtime_robot") or {}) if y.is_file() else {}
+    cap = np.asarray(rt.get("arm_torque_cap_nm", ARM_TORQUE_NM), float)
+    n = len(cap)
+    def per_joint(key, default):
+        v = np.asarray(rt.get(key, default[:n]), float)
+        if len(v) != n:
+            raise ValueError(f"{y}: runtime_robot.{key} has {len(v)} values for a {n}-joint arm")
+        return v
+    src = d / rt["arm_inertia_source"] if rt.get("arm_inertia_source") else d / "robot/yam_arm.xml"
+    return {"torque_nm": cap, "armature": per_joint("armature_kg_m2", ARM_ARMATURE),
+            "kp": per_joint("arm_kp", ARM_KP), "kd": per_joint("arm_kd", ARM_KD),
+            "arm_xml": src if src.is_file() else SETUP / "robot/yam_arm.xml",
+            "hand_adjacent": tuple(rt.get("hand_adjacent_arm_bodies", ("link5", "gripper"))),
+            "custom_gains": "arm_kp" in rt or "arm_kd" in rt}
+
+
+def _model_numeric(model, name, default):
+    i = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_NUMERIC, name)
+    if i < 0:
+        return default
+    a = int(model.numeric_adr[i])
+    return model.numeric_data[a:a + int(model.numeric_size[i])].copy()
 _RUNTIMES = weakref.WeakKeyDictionary()
 
 
@@ -128,9 +168,9 @@ def register_model(model, spec, base_dir=None):
 
 
 @lru_cache(maxsize=4)
-def trusted_mounts(setup_scene=str(SETUP / "scene.xml")):
-    """Flange -> hand transforms from the versioned setup, never from a rollout."""
-    m = mujoco.MjModel.from_xml_path(str(setup_scene))
+def trusted_mounts(setup_scene=None):
+    """Flange -> hand transforms from the versioned setup (default: the run's), never from a rollout."""
+    m = mujoco.MjModel.from_xml_path(str(setup_scene or setup_scene_default()))
     if not m.nkey:
         raise ValueError("the trusted setup must have a calibrated home keyframe")
     d = mujoco.MjData(m); mujoco.mj_resetDataKeyframe(m, d, 0); mujoco.mj_kinematics(m, d)
@@ -237,7 +277,9 @@ def compile_rigid(source, setup_scene=None, *, mounts=None, restore_arm_inertia=
     root = ET.fromstring(_SPECS[sm].to_xml())
     parents = {c: p for p in root.iter() for c in p}
     bodies = {b.get("name"): b for b in root.iter("body")}
-    mounts = mounts or trusted_mounts(str(setup_scene or SETUP / "scene.xml"))
+    setup_scene = str(setup_scene or setup_scene_default())
+    mounts = mounts or trusted_mounts(setup_scene)
+    spec = arm_spec(setup_scene)
     keys = [(sm.key(i).name, sm.key_qpos[i].copy()) for i in range(sm.nkey)]
     for e in list(root.findall("keyframe")):
         root.remove(e)
@@ -251,12 +293,12 @@ def compile_rigid(source, setup_scene=None, *, mounts=None, restore_arm_inertia=
     if custom is None:
         custom = ET.SubElement(root, "custom")
     ET.SubElement(custom, "text", name="dexagent_robot_schema", data=SCHEMA)
-    ET.SubElement(custom, "numeric", name="dexagent_arm_torque_nm", data=_values(ARM_TORQUE_NM))
-    # The arm inertias come from the arm file beside the setup scene in use (the checked-in one by default).
-    arm_xml = SETUP / "robot/yam_arm.xml"
-    if setup_scene is not None and (Path(setup_scene).parent / "robot/yam_arm.xml").is_file():
-        arm_xml = Path(setup_scene).parent / "robot/yam_arm.xml"
-    arm_template = ET.parse(arm_xml).getroot() if restore_arm_inertia else None
+    ET.SubElement(custom, "numeric", name="dexagent_arm_torque_nm", data=_values(spec["torque_nm"]))
+    if spec["custom_gains"]:
+        ET.SubElement(custom, "numeric", name="dexagent_arm_kp", data=_values(spec["kp"]))
+        ET.SubElement(custom, "numeric", name="dexagent_arm_kd", data=_values(spec["kd"]))
+    # The arm inertias come from the arm file the setup in use names (the YAM's by default).
+    arm_template = ET.parse(spec["arm_xml"]).getroot() if restore_arm_inertia else None
     arm_bodies = {b.get("name"): b for b in arm_template.iter("body")} if arm_template is not None else {}
     sides = []
     for side in ("left", "right"):
@@ -287,15 +329,15 @@ def compile_rigid(source, setup_scene=None, *, mounts=None, restore_arm_inertia=
                 if {e.get("body1"), e.get("body2")} == {head + "base_yaw", f"robot_{side}_arm_gripper"}:
                     eq.remove(e)
         ET.SubElement(custom, "numeric", name=f"dexagent_mount_{side}", data=_values(np.r_[p, q]))
-        for i in range(1, 7):
+        for i in range(1, len(spec["torque_nm"]) + 1):
             name = f"robot_{side}_arm_dof_joint{i}"
             js = next((j for j in root.iter("joint") if j.get("name") == name), None)
             if js is None:
                 raise ValueError(f"missing arm joint {name}")
-            cap = ARM_TORQUE_NM[i - 1]
+            cap = spec["torque_nm"][i - 1]
             js.set("actuatorfrcrange", _values([-cap, cap])); js.set("actuatorfrclimited", "true")
             # Reflected inertia stabilises the motor servo, without external forces.
-            js.set("armature", "0.032" if i <= 3 else "0.0018")
+            js.set("armature", format(float(spec["armature"][i - 1]), "g"))
             js.set("damping", "0.1")
             ET.SubElement(act, "motor", name=name + "_motor", joint=name,
                           ctrllimited="true", ctrlrange=_values([-cap, cap]),
@@ -358,7 +400,7 @@ def compile_rigid(source, setup_scene=None, *, mounts=None, restore_arm_inertia=
                 if (aa is bb or parents.get(aa) is bb or parents.get(bb) is aa
                         or parents.get(parents.get(aa)) is bb or parents.get(parents.get(bb)) is aa):
                     continue
-            if hb.startswith(f"robot_{side}_{side}_") and bn.endswith(("link5", "gripper")) and hb.endswith(("base_yaw", "hand_C_MC", "palm")):
+            if hb.startswith(f"robot_{side}_{side}_") and bn.endswith(spec["hand_adjacent"]) and hb.endswith(("base_yaw", "hand_C_MC", "palm")):
                 continue
             ET.SubElement(contact, "pair", geom1=gn, geom2=hn, condim="3", solref="0.006 1", solimp="0.99 0.999 0.001")
             existing.add(frozenset((gn, hn)))
@@ -466,6 +508,9 @@ def servo_rollout(model, Qref, fps, qpos_start=None, qvel_start=None, wrist_kp=1
     if not np.isfinite(fps) or fps <= 0:
         raise ValueError("fps must be positive")
     parts = E.robot_parts(model)
+    # posture gains serialized with the runtime robot (an arm other than the YAM brings its own)
+    arm_kp = _model_numeric(model, "dexagent_arm_kp", ARM_KP)
+    arm_kd = _model_numeric(model, "dexagent_arm_kd", ARM_KD)
     d, target = mujoco.MjData(model), mujoco.MjData(model)
     state_spec = mujoco.mjtState.mjSTATE_INTEGRATION
     if state_start is not None:
@@ -579,7 +624,7 @@ def servo_rollout(model, Qref, fps, qpos_start=None, qvel_start=None, wrist_kp=1
             # Damped nullspace posture control preserves the planned IK branch
             # at singularities without changing the Cartesian target.
             null = np.eye(len(qa)) - np.linalg.pinv(J, rcond=1e-3) @ J
-            posture = ARM_KP[:len(qa)] * (target.qpos[qa] - d.qpos[qa]) + ARM_KD[:len(qa)] * (refvel[adr] - d.qvel[adr])
+            posture = arm_kp[:len(qa)] * (target.qpos[qa] - d.qpos[qa]) + arm_kd[:len(qa)] * (refvel[adr] - d.qvel[adr])
             tau = J.T @ np.r_[F, M] + null @ posture + d.qfrc_bias[adr]
             aids = motors[s]
             lo, hi = model.actuator_ctrlrange[aids].T

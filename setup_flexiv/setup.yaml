@@ -1,0 +1,134 @@
+# Bimanual Flexiv Rizon 4 + Sharpa Wave bench (built by build_setup.py from ../setup/scene.xml).
+# The table, the ego and wrist cameras, both Sharpa hands and the rig frame are the default bench's; the two I2RT YAM
+# arms are replaced by Flexiv Rizon 4 arms (7 DOF) on mounting columns, bases tilted 45 deg outward.
+# scene.xml is the floating-wrist planning representation; physical episodes compile it with runtime_robot below.
+# Units: metres, radians, quaternions as [w, x, y, z]. Angles in degrees say so in the key name.
+
+name: flexiv_rizon4_sharpa_bench
+scene: scene.xml                     # table + both stations, keyframe `home`, cameras `ego`, `wrist_left`, `wrist_right`
+
+frame:                               # the default bench's rig frame, kept so the ego camera calibration still holds
+  origin: midpoint of the two station roots, projected onto the tabletop
+  x: toward the right station
+  y: into the work, away from the operator
+  z: up
+  tabletop_z: 0.0
+
+table:
+  body: table
+  geom: g_table
+  center: [0.0, 1.125, -0.02]
+  half_extents: [1.8, 1.075, 0.02]
+  work_area:
+    x: [-0.40, 0.32]
+    y: [0.05, 1.16]
+
+stations:                            # one arm + one hand each
+  left:
+    arm: Flexiv Rizon 4, 7 DOF
+    hand: Sharpa Wave, 22 finger joints, left
+    arm_xml: robot/rizon4_arm.xml                   # the arm alone
+    base_body: robot_left_arm_root
+    base_pos: [-0.235, 0.0, 0.0]     # the root; the Rizon base sits 0.25 m above it, tilted 45 deg outward
+    base_quat_wxyz: [1.0, 0.0, 0.0, 0.0]
+    arm_base_body: robot_left_arm_base
+    arm_base_world_pos: [-0.235, 0.0, 0.25]
+    arm_base_world_quat_wxyz: [0.853553, -0.146447, -0.353553, 0.353553]
+    arm_joints: [robot_left_arm_dof_joint1, robot_left_arm_dof_joint2, robot_left_arm_dof_joint3,
+                 robot_left_arm_dof_joint4, robot_left_arm_dof_joint5, robot_left_arm_dof_joint6,
+                 robot_left_arm_dof_joint7]
+    flange_body: robot_left_arm_gripper
+    hand_root_body: robot_left_left_base_yaw        # the end effector Stage 3 and Stage 4 steer
+    hand_xml: robot/sharpa_left.xml
+    wrist_joints: [robot_left_left_pos_x, robot_left_left_pos_y, robot_left_left_pos_z,
+                   robot_left_left_rot_x, robot_left_left_rot_y, robot_left_left_rot_z]
+    finger_joint_prefix: robot_left_left_
+    home_arm_rad: [-2.238031, 1.559732, -0.060138, -0.992414, 0.141501, 0.591948, 2.337373]
+    hand_mount_roll_rad: -4.712389   # -270 deg about the flange axis (build_setup.PLACEMENT)
+  right:
+    arm: Flexiv Rizon 4, 7 DOF
+    hand: Sharpa Wave, 22 finger joints, right
+    arm_xml: robot/rizon4_arm.xml
+    base_body: robot_right_arm_root
+    base_pos: [0.265, 0.0, 0.0]
+    base_quat_wxyz: [1.0, 0.0, 0.0, 0.0]
+    arm_base_body: robot_right_arm_base
+    arm_base_world_pos: [0.265, 0.0, 0.25]
+    arm_base_world_quat_wxyz: [0.353553, 0.353553, 0.146447, 0.853553]
+    arm_joints: [robot_right_arm_dof_joint1, robot_right_arm_dof_joint2, robot_right_arm_dof_joint3,
+                 robot_right_arm_dof_joint4, robot_right_arm_dof_joint5, robot_right_arm_dof_joint6,
+                 robot_right_arm_dof_joint7]
+    flange_body: robot_right_arm_gripper
+    hand_root_body: robot_right_right_base_yaw
+    hand_xml: robot/sharpa_right.xml
+    wrist_joints: [robot_right_right_pos_x, robot_right_right_pos_y, robot_right_right_pos_z,
+                   robot_right_right_rot_x, robot_right_right_rot_y, robot_right_right_rot_z]
+    finger_joint_prefix: robot_right_right_
+    home_arm_rad: [-1.362323, -1.802563, 0.58004, 0.788816, 2.279318, 0.73787, -2.391385]
+    hand_mount_roll_rad: 4.712389    # +270 deg
+
+robot:
+  body_prefix: robot_
+  attachment: fixed flange child in runtime
+  hand_root_frame: flange in runtime; world in proposal
+  actuators: 14 arm torque motors and 44 finger position servos in runtime
+  proposal_only: scene.xml virtual wrist joints and soft weld placeholders are for planning, never delivered physics
+  nq: 70
+  reach: 0.90                        # shoulder (joint 2) to flange, arm straight, from the kinematics in scene.xml
+
+runtime_robot:
+  schema: dexagent.rigid_robot.v1
+  compiler: tool_library.common.rigid_robot.compile_rigid
+  attachment: hand base_yaw is a fixed child of the arm gripper (the adapter plate's outer face); no wrist joints
+  nq_empty_bench: 58                 # 14 physical arm joints + 44 finger joints
+  arm_control: bounded Cartesian impedance mapped through the Jacobian to motor torques
+  gravity_compensation: motor feedforward included inside the total motor torque cap
+  arm_torque_cap_nm: [123, 123, 64, 64, 39, 39, 39]
+  arm_torque_source: flexiv_description 6d5145e config/Rizon4/joint_limits.yaml (effort)
+  arm_inertia_source: robot/rizon4_arm.xml
+  armature_kg_m2: [0.2, 0.2, 0.1, 0.1, 0.05, 0.05, 0.05]
+  armature_scope: reflected-inertia simulation estimate for harmonic-drive joints; requires hardware system identification
+  arm_kp: [300, 300, 200, 200, 80, 60, 40]   # null-space posture servo; simulation-tuned, not Flexiv's controller
+  arm_kd: [30, 30, 20, 20, 8, 6, 4]
+  hand_adjacent_arm_bodies: [link7, flange, gripper]   # arm bodies the hand base may touch (no contact pairs)
+  mount_source: flange-to-hand transforms at the trusted setup scene home keyframe
+  recording: initial mjSTATE_INTEGRATION plus every physics substep state, control and mechanism state
+
+home:
+  keyframe: home
+  description: both hands palm down 0.60 m apart, 0.10 m above the table, thumbs inward, fingers pointing into the work
+  hand_root_pos:
+    left: [-0.320, 0.700, 0.100]
+    right: [0.280, 0.700, 0.100]
+
+cameras:                             # unchanged from the default bench
+  ego:
+    width: 640
+    height: 480
+    fovy_deg: 38.0
+    focal_px: 697.0
+    pos: [0.01879, -0.18293, 0.55779]
+    quat_wxyz: [0.881567, 0.470897, 0.024947, 0.021763]
+    pitch_deg: 33.73
+    yaw_deg: 94.45
+    roll_deg: -1.62
+  wrist_left:
+    parent_body: robot_left_left_base_yaw
+    pos: [0.050377, -0.0016, 0.054631]
+    quat_wxyz: [0.148974, 0.678966, -0.702458, -0.152857]
+    fovy_deg: 100.0
+  wrist_right:
+    parent_body: robot_right_right_base_yaw
+    pos: [0.050377, 0.001601, 0.054631]
+    quat_wxyz: [0.152857, 0.702458, -0.678966, -0.148973]
+    fovy_deg: 100.0
+
+physics:
+  timestep: 0.002
+  integrator: implicitfast
+  impratio: 5
+
+render:                              # Stage 4 render presets (stage4_robot_data_generation/stage4/materials.json), first match wins
+  materials:
+    - {match: "^robot_\\w+_(arm_|mount_plate|pedestal)", preset: rizon_white}
+    - {match: "^robot_", preset: sharpa}

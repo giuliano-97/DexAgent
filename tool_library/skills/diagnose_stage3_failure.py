@@ -69,7 +69,7 @@ from pathlib import Path
 
 import numpy as np
 
-DEFAULT_SETUP = Path(__file__).resolve().parents[2] / "setup"
+from tool_library.common.setup_path import setup_dir as run_setup_dir
 CLASSES = ("upstream_suspect", "thin_object", "needs_steadying_hand", "unreachable", "no_stress_pass", "slip_in_carry", "collision",
            "joint_speed", "physics_audit", "stage4_randomize", "goal_not_met", "state_requires_physics", "deformable_topology")
 GRASP_MOTIONS = ("grasp_lift", "hold", "regrasp", "pull", "open_joint", "close_joint", "unscrew", "screw", "unscrew_bite", "press_seat",
@@ -171,7 +171,7 @@ def _newest(ws, pattern, n):
 def _pad_radius(setup_dir):
     import mujoco
     from tool_library.common import hand as H
-    xml = Path(setup_dir or DEFAULT_SETUP) / "robot" / "sharpa_right.xml"
+    xml = Path(setup_dir or run_setup_dir()) / "robot" / "sharpa_right.xml"
     m = mujoco.MjModel.from_xml_path(str(xml))
     return float(H.pad_radius(m, H.HandRig.build(m, "", "right")))
 

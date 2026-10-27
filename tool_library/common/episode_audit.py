@@ -835,8 +835,9 @@ def read_json(x, what):
 
 
 def setup_scene_path():
-    """The repository's default setup scene (setup/scene.xml next to tool_library/), or None."""
-    p = Path(__file__).resolve().parents[2] / "setup" / "scene.xml"
+    """The run's setup scene (default: setup/scene.xml next to tool_library/), or None."""
+    from tool_library.common.setup_path import setup_dir
+    p = setup_dir() / "scene.xml"
     return str(p) if p.exists() else None
 
 

@@ -195,8 +195,8 @@ def hand_scene_from_recon(scene_recon_json, side, target, grasp_body=None, state
     else:
         data.qpos[:] = np.asarray(state, float)
     mujoco.mj_forward(model, data)
-    repo = Path(__file__).resolve().parents[2]
-    setup = Path(setup_dir) if setup_dir else repo / "setup"
+    from tool_library.common.setup_path import setup_dir as run_setup
+    setup = Path(setup_dir) if setup_dir else run_setup()
     hand_xml = str(Path(hand_xml).resolve()) if hand_xml else str(setup / "robot" / f"sharpa_{side}.xml")
     if not Path(hand_xml).exists():
         raise FileNotFoundError(f"hand MJCF not found: {hand_xml}")

@@ -58,12 +58,12 @@ import numpy as np
 
 from tool_library.common import rigcam as RC
 
-DEFAULT_SETUP = Path(__file__).resolve().parents[2] / "setup" / "setup.yaml"
+from tool_library.common.setup_path import setup_dir as run_setup_dir
 
 
 def _setup_camera(setup_yaml):
     import yaml
-    s = yaml.safe_load(Path(setup_yaml or DEFAULT_SETUP).read_text())
+    s = yaml.safe_load(Path(setup_yaml or run_setup_dir() / "setup.yaml").read_text())
     ego = s["cameras"]["ego"]
     return RC.camera_from_mujoco(ego["width"], ego["height"], ego["fovy_deg"], ego["pos"], ego["quat_wxyz"])
 

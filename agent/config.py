@@ -62,6 +62,8 @@ def load_config(path: str | os.PathLike | None = None) -> dict:
                 p = cand if cand.exists() or keys == ("run", "output_dir") else (REPO / p if (REPO / p).exists() else cand)
             _set(merged, keys, str(p.resolve()))
     egodex_video(merged)
+    if merged.get("inputs", {}).get("setup"):
+        os.environ["DEXAGENT_SETUP"] = merged["inputs"]["setup"]   # the default setup of every tool this run calls
     merged["_config_path"] = str(path)
     return merged
 

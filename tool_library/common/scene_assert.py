@@ -25,7 +25,7 @@ if sys.platform.startswith("linux"):  # headless offscreen rendering; MuJoCo rej
 import mujoco
 import numpy as np
 
-SETUP_DIR = Path(__file__).resolve().parents[2] / "setup"
+from tool_library.common.setup_path import setup_dir as run_setup_dir
 ROBOT_PREFIX = "robot_"
 HELPER_BODIES = ("world", "camrig")
 GEOM = mujoco.mjtGeom
@@ -77,7 +77,7 @@ def r6(x, n=6):
 # ----------------------------------------------------------------------------------------------------------- setup
 def setup_paths(setup=None):
     """A setup folder, its setup.yaml or its scene.xml -> (folder, yaml path or None, scene path)."""
-    p = Path(setup) if setup is not None else SETUP_DIR
+    p = Path(setup) if setup is not None else run_setup_dir()
     if p.is_dir():
         d = p
         y = d / "setup.yaml"

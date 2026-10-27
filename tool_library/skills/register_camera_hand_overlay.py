@@ -76,7 +76,7 @@ import numpy as np
 from tool_library.common import human_prior as HP
 from tool_library.common import rigcam as RC
 
-DEFAULT_SETUP = Path(__file__).resolve().parents[2] / "setup"
+from tool_library.common.setup_path import setup_dir as run_setup_dir
 
 
 def _read_mask(hand_mask, frame_path, W, H):
@@ -162,7 +162,7 @@ def register_camera_hand_overlay(frame, hand_mask, out_json, setup_dir=None, fov
     H, W = img.shape[:2]
     if hand_pose not in ("home", "on_table"):
         raise ValueError("hand_pose must be 'home' or 'on_table'")
-    setup = Path(setup_dir) if setup_dir else DEFAULT_SETUP
+    setup = Path(setup_dir) if setup_dir else run_setup_dir()
     s = yaml.safe_load((setup / "setup.yaml").read_text())
     ego = s["cameras"]["ego"]
     base = RC.camera_from_mujoco(ego["width"], ego["height"], ego["fovy_deg"], ego["pos"], ego["quat_wxyz"])
