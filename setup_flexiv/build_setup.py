@@ -76,16 +76,18 @@ PLACEMENT = {
     "base_yaw_deg": 135.0,               # right base's turn about its own (tilted) axis; the left one is mirrored: 180 - yaw
     "mount_roll_deg": {"left": -270.0, "right": 270.0},   # the hand's roll on the adapter, about the flange axis
 }
-# Keyframe `home`: both hands on edge, palms facing each other 0.36 m apart, thumbs up, fingers forward into the work
-# (HOME_HAND_STYLE "palm_down" lays them flat instead: palms down, thumbs inward). Sharpa hand frame: fingers +z, palm faces +x, thumb on +y
+# Keyframe `home`: both hands palm down 0.60 m apart, thumbs inward, fingers forward into the work
+# (HOME_HAND_STYLE "on_edge" stands them up instead: palms facing each other, thumbs up). Sharpa hand frame: fingers +z, palm faces +x, thumb on +y
 # (right) / -y (left).
-# x / y are where the ego camera (default bench calibration) saw them at 34% / 67% of the image width and 61% of its
-# height at z = 0.16; the hands were then spread to 0.36 m apart about their midpoint and moved 0.20 m forward.
-HOME_HANDS = {"left": [-0.200, 0.520, 0.16], "right": [0.160, 0.520, 0.16]}
-HOME_HAND_STYLE = "on_edge"
+# The midpoint x is where the ego camera (default bench calibration) saw the hands of the default bench. 0.60 m apart, the
+# wrist links (5-7) behind each hand stay out of the centre half of the ego image, and both hands stay in frame and
+# inside the work area. y / z put them well into the work and low (0.70 m, 0.10 m): the lowest wrist link stays 5 cm
+# above the table, and every joint stays more than 20 deg inside its limits.
+HOME_HANDS = {"left": [-0.320, 0.700, 0.10], "right": [0.280, 0.700, 0.10]}
+HOME_HAND_STYLE = "palm_down"
 HOME_FINGER_PITCH_UP_DEG = 0.0
 INCLUDE_TABLE = True                     # the default bench's table (and its hand-table contact pairs)
-TABLE_TOP_Z = 0.0                        # the default bench's: 0.16 m under the hands
+TABLE_TOP_Z = 0.0                        # the default bench's: 0.10 m under the hand roots
 RIG_MID_X = 0.015
 ARM_RGBA = "0.92 0.92 0.93 1"
 PEDESTAL_RGBA = "0.25 0.25 0.27 1"
@@ -273,7 +275,7 @@ def solve_home(model, bench=DEFAULT_BENCH, placement=PLACEMENT, seeds=48, rng=0)
             d.qpos[model.jnt_qposadr[j]:model.jnt_qposadr[j] + n] = sd.qpos[src.jnt_qposadr[sj]:src.jnt_qposadr[sj] + n]
     from tool_library.common import plan as P
     rigs = P.scene_rigs(model)
-    for side, rig in rigs.items():           # the hands' home pose: HOME_HANDS, on edge
+    for side, rig in rigs.items():           # the hands' home pose: HOME_HANDS, HOME_HAND_STYLE
         wrist = [rig.wrist_qpos[k] for k in ("x", "y", "z", "rx", "ry", "rz")]
         d.qpos[wrist] = P.wrist_joints_from_world(model, d, rig, np.asarray(HOME_HANDS[side], float),
                                                   home_hand_rotation(side), d.qpos[wrist[3:]])
