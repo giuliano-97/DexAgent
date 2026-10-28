@@ -101,6 +101,7 @@ models:                                # checkouts and weights; a tool call that
   hamer_root: null                     # HaMeR checkout with _DATA/ (hand meshes)
   sam3d_repo: null                     # SAM 3D Objects checkout (object meshes)
   sam2_checkpoint: null                # SAM 2.1 checkpoint .pt (track_objects); null = download from Hugging Face
+  sam3_checkpoint: null                # SAM 3 image checkpoint sam3.pt (detect_objects, segment_with_text_prompts); null = facebook/sam3 from Hugging Face
   video_depth_anything_dir: null       # Video-Depth-Anything checkout (estimate_depth)
   video_depth_anything_ckpt: null      # its metric_video_depth_anything_vitl.pth
   articraft_dir: null                  # ArtiCraft checkout (articulated objects); the built-in URDF writer is used without it

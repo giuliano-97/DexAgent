@@ -15,6 +15,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # the repository root: runs as a script too
 D = importlib.import_module("tool_library.skills.detect_objects")
 S = importlib.import_module("tool_library.skills.segment_with_text_prompts")
+from tool_library.common.evidence import file_digest  # noqa: E402
 
 
 class SamImageLoadingTest(unittest.TestCase):
@@ -59,6 +60,17 @@ class SamImageLoadingTest(unittest.TestCase):
         self.cache.return_value = None
         self.load()
         self.download.assert_called_once_with(version="sam3")
+
+    def test_local_checkpoint_bypasses_cache_and_download(self):
+        local = self.path / "group" / "sam3.pt"
+        local.parent.mkdir()
+        local.write_bytes(b"group copy")
+        result = self.load(checkpoint=local)
+        self.cache.assert_not_called()
+        self.download.assert_not_called()
+        self.assertEqual(result.model_identity["checkpoint_sha256"], file_digest(str(local)))
+        with self.assertRaises(FileNotFoundError):
+            self.load(checkpoint=self.path / "missing.pt")
 
     def test_only_disabled_interactive_tracker_neck_extras_are_ignored(self):
         self.torch.load.return_value = {"detector.weight": "loaded", "detector.backbone.vision_backbone.sam2_convs.0.weight": "unused"}
@@ -118,8 +130,9 @@ class SamImageLoadingTest(unittest.TestCase):
         proc = Mock(model_identity={"version": "sam3", "checkpoint_sha256": "a" * 64})
         proc.set_text_prompt.return_value = {"masks": masks, "scores": np.array([.9])}
         with patch.object(S, "load_sam3", return_value=proc) as load:
-            result = S.segment_with_text_prompts(frames, ["object"], self.path / "masks", instances=True)
-        load.assert_called_once_with(.3, "sam3")
+            result = S.segment_with_text_prompts(frames, ["object"], self.path / "masks", instances=True,
+                                                 checkpoint=self.checkpoint)
+        load.assert_called_once_with(.3, "sam3", self.checkpoint)
         self.assertEqual(result["model_identity"], proc.model_identity)
         self.assertEqual(result["n_instances"]["object"], [1])
         self.assertEqual(result["instances"]["object"][0][0]["area_px"], 150)

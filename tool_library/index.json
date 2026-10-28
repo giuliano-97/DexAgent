@@ -10688,6 +10688,12 @@
      "type": "str",
      "description": "Image checkpoint version: 'sam3' (default). SAM 3.1 multiplex video checkpoints are not compatible with this image tool.",
      "optional": true
+    },
+    {
+     "name": "checkpoint",
+     "type": "path | None",
+     "description": "SAM 3 image checkpoint (sam3.pt). None: facebook/sam3 from the Hugging Face cache, downloaded if missing.",
+     "optional": true
     }
    ],
    "outputs": [
@@ -19925,6 +19931,12 @@
      "name": "version",
      "type": "str",
      "description": "Image checkpoint version: 'sam3' (default). SAM 3.1 multiplex video checkpoints are not supported by this image tool.",
+     "optional": true
+    },
+    {
+     "name": "checkpoint",
+     "type": "path | None",
+     "description": "SAM 3 image checkpoint (sam3.pt). None: facebook/sam3 from the Hugging Face cache, downloaded if missing.",
      "optional": true
     }
    ],

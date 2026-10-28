@@ -15,7 +15,7 @@ PATH_KEYS = {("inputs", "video"), ("inputs", "setup"), ("inputs", "library"), ("
              ("models", "hf_home"), ("models", "void_dir"), ("models", "hamer_root"),
              ("models", "sam3d_repo"), ("models", "articraft_dir"), ("models", "bodex_dir"), ("models", "dexgraspnet_dir"),
              ("models", "hand_urdf"), ("models", "video_depth_anything_dir"), ("models", "video_depth_anything_ckpt"),
-             ("models", "sam2_checkpoint"), ("models", "spider_dir"), ("camera", "extrinsics", "matrix_file")}
+             ("models", "sam2_checkpoint"), ("models", "sam3_checkpoint"), ("models", "spider_dir"), ("camera", "extrinsics", "matrix_file")}
 
 
 SEMANTICS = "scene_semantics.json"

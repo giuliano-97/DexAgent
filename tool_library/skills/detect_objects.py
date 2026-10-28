@@ -26,6 +26,7 @@ TOOL = {
         {"name": "frame_indices", "type": "list[int] | None", "description": "Positions (0-based, in sorted file order) of the frames in frames_dir to scan. Default None: 20% of the frames but at least 8 (or all when there are fewer), evenly spaced including the first and the last."},
         {"name": "min_score", "type": "float", "description": "Detection confidence floor. Default 0.1."},
         {"name": "version", "type": "str", "description": "Image checkpoint version: 'sam3' (default). SAM 3.1 multiplex video checkpoints are not compatible with this image tool."},
+        {"name": "checkpoint", "type": "path | None", "description": "SAM 3 image checkpoint (sam3.pt). None: facebook/sam3 from the Hugging Face cache, downloaded if missing."},
     ],
     "outputs": [
         {"name": "scan", "type": "dict",
@@ -71,8 +72,9 @@ class _InferenceProcessor:
         return self._call("set_text_prompt", *args, **kwargs)
 
 
-def load_sam3(min_score=0.1, version="sam3"):
-    """Load the image checkpoint strictly; never use a partial/random model."""
+def load_sam3(min_score=0.1, version="sam3", checkpoint=None):
+    """Load the image checkpoint strictly; never use a partial/random model. `checkpoint`: a local sam3.pt instead of
+    the Hugging Face cache."""
     if version != "sam3":
         raise ValueError("SAM image detection/segmentation requires version='sam3'; "
                          "sam3.1 is a multiplex video checkpoint, not this image model")
@@ -85,7 +87,12 @@ def load_sam3(min_score=0.1, version="sam3"):
         raise ImportError("SAM 3 image dependencies are missing in this interpreter. Configure environments.sam3 "
                           "and route detect_objects / segment_with_text_prompts to it; install sam3 and torch there "
                           "(https://github.com/facebookresearch/sam3) and provide facebook/sam3 checkpoint access") from e
-    checkpoint = try_to_load_from_cache("facebook/sam3", "sam3.pt")
+    if checkpoint:
+        checkpoint = str(checkpoint)
+        if not Path(checkpoint).is_file():
+            raise FileNotFoundError(f"SAM 3 checkpoint {checkpoint} does not exist")
+    else:
+        checkpoint = try_to_load_from_cache("facebook/sam3", "sam3.pt")
     if not isinstance(checkpoint, str) or not Path(checkpoint).is_file():
         checkpoint = download_ckpt_from_hf(version="sam3")
     from tool_library.common.evidence import file_digest
@@ -129,7 +136,7 @@ def sample_indices(n_total, frac=0.2, min_frames=MIN_FRAMES):
 
 
 def detect_objects(frames_dir, keywords, out_json, frame_indices=None, min_score=0.1,
-                   version="sam3", processor=None):
+                   version="sam3", processor=None, checkpoint=None):
     from PIL import Image
     files = frame_files(frames_dir)
     assert files, f"no frames in {frames_dir}"
@@ -142,7 +149,7 @@ def detect_objects(frames_dir, keywords, out_json, frame_indices=None, min_score
     else:
         idx = sample_indices(len(files))
         selection = f"default: {len(idx)} of {len(files)} frames evenly spaced (20%, at least {MIN_FRAMES})"
-    proc = processor or load_sam3(min_score, version)
+    proc = processor or load_sam3(min_score, version, checkpoint)
     dets = {}
     for fi in idx:
         state = proc.set_image(Image.open(files[fi]).convert("RGB"))
@@ -179,8 +186,9 @@ def main(argv=None):
     ap.add_argument("--frames", nargs="*", type=int)
     ap.add_argument("--min-score", type=float, default=0.1)
     ap.add_argument("--version", default="sam3", choices=["sam3"])
+    ap.add_argument("--checkpoint")
     a = ap.parse_args(argv)
-    s = detect_objects(a.frames_dir, a.keywords, a.out_json, a.frames or None, a.min_score, a.version)
+    s = detect_objects(a.frames_dir, a.keywords, a.out_json, a.frames or None, a.min_score, a.version, checkpoint=a.checkpoint)
     print(json.dumps(s["summary"], indent=1))
 
 

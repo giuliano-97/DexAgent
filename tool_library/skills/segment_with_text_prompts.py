@@ -26,6 +26,7 @@ TOOL = {
         {"name": "downscale", "type": "float", "description": "Detect at this fraction of the resolution. Default 1.0."},
         {"name": "instances", "type": "bool", "description": "Also write one mask per instance (instances/<prompt slug>/frame%05d_<k>.png) and list them in meta.json. Default false (union masks only)."},
         {"name": "version", "type": "str", "description": "Image checkpoint version: 'sam3' (default). SAM 3.1 multiplex video checkpoints are not supported by this image tool."},
+        {"name": "checkpoint", "type": "path | None", "description": "SAM 3 image checkpoint (sam3.pt). None: facebook/sam3 from the Hugging Face cache, downloaded if missing."},
     ],
     "outputs": [
         {"name": "meta", "type": "dict", "description": "prompts, n_frames, mean coverage, out_dir, model_identity with actual checkpoint SHA256/runtime; with instances: instances {prompt: [[{mask, score, box [x0, y0, x1, y1] px, area_px}] per frame]}."},
@@ -63,14 +64,14 @@ def _slug(p):
 
 
 def segment_with_text_prompts(frames_dir, prompts, out_dir, min_score=0.3, downscale=1.0,
-                              processor=None, instances=False, version="sam3"):
+                              processor=None, instances=False, version="sam3", checkpoint=None):
     from PIL import Image
     files = frame_files(frames_dir)
     assert files, f"no frames in {frames_dir}"
     prompts = [p.strip() for p in prompts if p.strip()]
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    proc = processor or load_sam3(min_score, version)
+    proc = processor or load_sam3(min_score, version, checkpoint)
     cover = []
     inst = {p: [] for p in prompts} if instances else None
     if instances:
@@ -137,8 +138,9 @@ def main(argv=None):
     ap.add_argument("--downscale", type=float, default=1.0)
     ap.add_argument("--instances", action="store_true")
     ap.add_argument("--version", default="sam3", choices=["sam3"])
+    ap.add_argument("--checkpoint")
     a = ap.parse_args(argv)
-    print(json.dumps(segment_with_text_prompts(a.frames_dir, a.prompts, a.out_dir, a.min_score, a.downscale, instances=a.instances, version=a.version), indent=1))
+    print(json.dumps(segment_with_text_prompts(a.frames_dir, a.prompts, a.out_dir, a.min_score, a.downscale, instances=a.instances, version=a.version, checkpoint=a.checkpoint), indent=1))
 
 
 if __name__ == "__main__":

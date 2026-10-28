@@ -98,6 +98,8 @@ CONFIG_ARGS = {
 }
 TOOL_CONFIG_ARGS = {"estimate_depth": {"checkpoint": ("models", "video_depth_anything_ckpt")},
                     "track_objects": {"checkpoint": ("models", "sam2_checkpoint")},
+                    "detect_objects": {"checkpoint": ("models", "sam3_checkpoint")},
+                    "segment_with_text_prompts": {"checkpoint": ("models", "sam3_checkpoint")},
                     "optimize_grasp_pose": {"launcher": ("compute", "launcher"), "workers": ("compute", "workers")},
                     "sampling_mpc_refinement": {"workers": ("compute", "workers")},
                     "reinforcement_learning_tracking": {"workers": ("compute", "workers")}}
