@@ -1,14 +1,17 @@
-# An EgoDex episode on the bimanual Flexiv Rizon 4 + Sharpa Wave bench (setup_flexiv/), with Gemini as the agent.
-#   export OPENAI_API_KEY=<your Gemini API key>        # the openai provider reads this; Google's endpoint takes the Gemini key
-#   python run_dexagent.py dexagent_flexiv_egodex.yaml
+# An EgoDex episode on the bimanual Flexiv Rizon 4 + Sharpa Wave bench (setup_flexiv/), with Gemini through the group's
+# Cloudflare AI Gateway (CLAUDE.md). Needs OPENAI_BASE_URL (the gateway's /compat endpoint), OPENAI_API_KEY,
+# CF_PROJECT_ID and CF_USER_ID in the environment, then
+#   python run_dexagent.py dexagent_flexiv_egodex.yaml --to stage3
 # Keys left out (or empty) fall back to dexagent.yaml.
 
 agent:
-  provider: openai                     # Gemini through Google's OpenAI-compatible endpoint
-  base_url: https://generativelanguage.googleapis.com/v1beta/openai/
-  model: gemini-3-pro-preview          # TODO: the Gemini model id you have access to
-  budget_usd: null                     # TODO (required): the run's spending cap in USD
-  price_usd_per_mtok: {input: null, output: null}   # TODO (required for a model DexAgent does not list): USD per million tokens
+  provider: openai                     # the gateway's OpenAI-compatible endpoint
+  base_url: null                       # the gateway URL is not committed: the openai SDK reads OPENAI_BASE_URL
+  headers:                             # the gateway's metadata header; the ids are read from the environment
+    cf-aig-metadata: '{"project_id": "${CF_PROJECT_ID}", "user_id": "${CF_USER_ID}"}'
+  model: google-ai-studio/gemini-3.8-flash
+  budget_usd: 20                       # the run's spending cap, across all its stages
+  price_usd_per_mtok: {input: 0.75, output: 3.75}   # https://ai.google.dev/gemini-api/docs/pricing#gemini-3.8-flash
 
 run:
   name: egodex_flexiv
@@ -19,17 +22,27 @@ examples:
 
 inputs:
   video: null                          # the episode's .mp4 beside the .hdf5
-  egodex_hdf5: /scratch/giuliano_albanese/egodex/TODO/0.hdf5   # TODO: the EgoDex episode
+  egodex_hdf5: /group/spear-dex/datasets/EgoDex/test/basic_pick_place/27.hdf5
   task: ""
   setup: setup_flexiv
 
 stage3:
   notes: "The arms are 7-DOF Flexiv Rizon 4s on columns 0.25 m above the tabletop, bases tilted 45 deg outward; at home the hands are palm down, 0.60 m apart, 0.70 m into the table and 0.10 m above it."
 
-environments:                          # TODO on the GPU node: interpreters for the perception tools and Stage 4 (see dexagent.yaml)
-  sam3: null
-  sam2: null
-  hamer: null
-  sam3d: null
-  depth: null
-  stage4: null
+models:                                # checkouts in ~/workspaces/dexagent/third_party, weights in /group/spear-dex/assets
+  sam3_checkpoint: /group/spear-dex/assets/sam3/sam3.pt
+  sam2_checkpoint: /group/spear-dex/assets/sam2/sam2.1_hiera_large.pt
+  video_depth_anything_dir: /home/giuliano_albanese/workspaces/dexagent/third_party/Video-Depth-Anything
+  video_depth_anything_ckpt: /group/spear-dex/assets/video_depth_anything/metric_video_depth_anything_vitl.pth
+  hamer_root: /home/giuliano_albanese/workspaces/dexagent/third_party/hamer      # _DATA -> /group/spear-dex/assets/hamer/_DATA (MANO_RIGHT.pkl built from the group's MANO npz)
+  sam3d_repo: /home/giuliano_albanese/workspaces/dexagent/third_party/sam-3d-objects   # checkpoints/hf -> /group/spear-dex/assets/sam3d/hf
+  spider_dir: /home/giuliano_albanese/workspaces/dexagent/third_party/spider
+
+environments:                          # one uv env per model (~/workspaces/dexagent/envs); GeoCalib weights via ~/.cache/torch/hub/geocalib
+  sam3: /home/giuliano_albanese/workspaces/dexagent/envs/sam3/bin/python
+  sam2: /home/giuliano_albanese/workspaces/dexagent/envs/sam2/bin/python
+  hamer: /home/giuliano_albanese/workspaces/dexagent/envs/hamer/bin/python
+  sam3d: /home/giuliano_albanese/workspaces/dexagent/envs/sam3d/bin/python     # A6000 nodes only: on A100/H100/H200 SAM 3D asks for flash_attn, which is not installed
+  depth: /home/giuliano_albanese/workspaces/dexagent/envs/depth/bin/python
+  spider: /home/giuliano_albanese/workspaces/dexagent/envs/spider/bin/python   # Python 3.12, mujoco 3.7 (SPIDER's pins)
+  stage4: null                         # this run stops after Stage 3
