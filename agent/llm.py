@@ -11,6 +11,7 @@ import base64
 import json
 import mimetypes
 import os
+import re
 from pathlib import Path
 
 
@@ -72,9 +73,11 @@ class OpenAILLM:
     user message, because the tool role carries text only."""
     priced = True                                   # its calls are charged to the run's budget
 
-    def __init__(self, model: str, api_key: str | None = None, base_url: str | None = None, max_tokens: int = 8000):
+    def __init__(self, model: str, api_key: str | None = None, base_url: str | None = None, max_tokens: int = 8000,
+                 headers: dict | None = None):
         import openai
-        self.client = openai.OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"), base_url=base_url)
+        self.client = openai.OpenAI(api_key=api_key or os.environ.get("OPENAI_API_KEY"), base_url=base_url,
+                                    default_headers=headers or None)
         self.model, self.max_tokens = model, max_tokens
 
     def complete(self, system: str, messages: list[dict], tools: list[dict]) -> list[dict]:
@@ -169,6 +172,18 @@ def load_mock(path, stage: str | None = None) -> MockLLM:
     return MockLLM(runs)
 
 
+def request_headers(headers: dict | None) -> dict:
+    """agent.headers with $VAR / ${VAR} taken from the environment. They are expanded here, when the client is built,
+    so values such as gateway ids never enter the stored configuration."""
+    out = {}
+    for k, v in (headers or {}).items():
+        v = os.path.expandvars(str(v))
+        if re.search(r"\$\{?[A-Za-z_]", v):
+            raise ValueError(f"agent.headers[{k!r}] names an environment variable that is not set")
+        out[str(k)] = v
+    return out
+
+
 def make_llm(cfg: dict):
     a = cfg.get("agent", {})
     provider = (a.get("provider") or "anthropic").lower()
@@ -185,5 +200,5 @@ def make_llm(cfg: dict):
     if provider == "anthropic":
         return AnthropicLLM(**kw)
     if provider == "openai":
-        return OpenAILLM(**kw)
+        return OpenAILLM(**kw, headers=request_headers(a.get("headers")))
     raise ValueError(f"unknown model provider: {provider}")

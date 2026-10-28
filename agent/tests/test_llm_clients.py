@@ -26,7 +26,7 @@ TURNS = [  # (tool name, input) per model turn; the last turn is plain text (a f
     ("look", {"paths": ["sheet.jpg"]}),
     ("finish", {"summary": "stub run"}),
 ]
-SEEN = {"requests": 0, "tool_results": 0, "images": 0, "errors": []}
+SEEN = {"requests": 0, "tool_results": 0, "images": 0, "errors": [], "gateway_headers": set()}
 
 
 def _check_request(kind: str, body: dict, turn: int):
@@ -67,6 +67,7 @@ class Stub(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
         kind = "anthropic" if self.path.endswith("/messages") else "openai"
+        SEEN["gateway_headers"].add(self.headers.get("x-gateway-meta"))
         turn = _turn_index(kind, body)
         SEEN["requests"] += 1
         _check_request(kind, body, turn)
@@ -93,10 +94,12 @@ def run_case(provider: str, port: int, tmp: Path) -> list[str]:
     for k in ("requests", "tool_results", "images"):
         SEEN[k] = 0
     SEEN["errors"] = []
+    SEEN["gateway_headers"] = set()
     base = f"http://127.0.0.1:{port}" + ("/v1" if provider == "openai" else "")
     # an API model run needs a spending cap and a price for its model; $1 at $1 / Mtok is far above the stub's tokens
     cfg = {"agent": {"provider": provider, "model": "stub-model", "api_key": "stub-key", "base_url": base,
-                     "budget_usd": 1, "price_usd_per_mtok": {"input": 1, "output": 1}},
+                     "budget_usd": 1, "price_usd_per_mtok": {"input": 1, "output": 1},
+                     **({"headers": {"x-gateway-meta": '{"project_id": "${STUB_GATEWAY_PROJECT}"}'}} if provider == "openai" else {})},
            "run": {"name": f"stub_{provider}", "output_dir": str(tmp / "runs")},
            "examples": {"reuse": False}, "inputs": {"video": str(VIDEO), "task": "Close the red gift box"}}
     cfg_path = tmp / f"{provider}.yaml"
@@ -115,6 +118,10 @@ def run_case(provider: str, port: int, tmp: Path) -> list[str]:
         fails.append(f"{provider}: the contact sheet image never reached the model")
     if not any(e.get("event") == "verify" for e in trace):
         fails.append(f"{provider}: finish did not run the verifiers")
+    if provider == "openai" and SEEN["gateway_headers"] != {'{"project_id": "stub-project"}'}:
+        fails.append(f"openai: agent.headers not sent as configured: {SEEN['gateway_headers']}")
+    if provider == "openai" and "stub-project" in cfg_path.read_text():
+        fails.append("openai: an expanded header value was written into the configuration")
     if rc != 1:   # the stub writes no deliverable, so the verifiers must fail and the stage must end unfinished
         fails.append(f"{provider}: return code {rc}, expected 1 (unfinished)")
     return fails
@@ -123,6 +130,7 @@ def run_case(provider: str, port: int, tmp: Path) -> list[str]:
 def main():
     os.environ.setdefault("MUJOCO_GL", "egl")
     os.environ["DEXAGENT_PLAIN"] = "1"
+    os.environ["STUB_GATEWAY_PROJECT"] = "stub-project"
     srv = ThreadingHTTPServer(("127.0.0.1", 0), Stub)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     tmp = Path(tempfile.mkdtemp(prefix="dexagent_llm_", dir=os.environ.get("TMPDIR")))
